@@ -1,0 +1,607 @@
+<!doctype html>
+<html lang="en"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Horror Romance Adventure</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Alegreya:wght@400;500;700&amp;family=Space+Mono:wght@400;700&amp;display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --ink:#06100c;
+      --pine:#0b1f18;
+      --pine-2:#15392b;
+      --moss:#6d8d63;
+      --blood:#8e1e22;
+      --ember:#d66c4a;
+      --cream:#f7ebd8;
+      --gold:#e5c77a;
+      --mist:#dbe9da;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;width:100%;min-height:100%;overflow:hidden}
+    body{
+      font-family:'Alegreya',serif;
+      color:var(--cream);
+      background:#07100c;
+    }
+    button{font:inherit}
+    .app-shell{width:100%;height:calc(100 * min(var(--vh, 1vh), 1vh));position:relative;overflow:hidden;background:#07100c}
+    .scene{position:absolute;inset:0;opacity:0;pointer-events:none;transition:opacity 1.2s ease, transform 1.4s ease}
+    .scene.active{opacity:1;pointer-events:auto}
+    .grain:after{
+      content:"";position:absolute;inset:0;pointer-events:none;opacity:.09;
+      background-image:radial-gradient(rgba(255,255,255,.55) 1px, transparent 1px);
+      background-size:3px 3px;mix-blend-mode:soft-light;
+    }
+    .vignette:before{
+      content:"";position:absolute;inset:0;pointer-events:none;
+      background:radial-gradient(circle at center, transparent 42%, rgba(0,0,0,.42) 72%, rgba(0,0,0,.82) 100%);
+      z-index:20;
+    }
+    .cinema-bars:after,.cinema-bars:before{content:"";position:absolute;left:0;width:100%;height:5.5%;background:#050806;z-index:50}
+    .cinema-bars:before{top:0}.cinema-bars:after{bottom:0}
+    .title-font{font-family:'Space Mono',monospace;letter-spacing:.16em;text-transform:uppercase}
+    .fade-up{animation:fadeUp 1.2s ease both}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+    .pulse-soft{animation:pulseSoft 2.8s ease-in-out infinite}
+    @keyframes pulseSoft{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
+    .floating{animation:floating 4.5s ease-in-out infinite}
+    @keyframes floating{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+    .intro-bg{background:
+      radial-gradient(circle at 50% 20%, rgba(138,44,35,.24), transparent 34%),
+      linear-gradient(180deg, rgba(6,16,12,.35), rgba(6,16,12,.95))}
+    .intro-card{
+      position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+      width:min(88%,760px);text-align:center;z-index:30;padding:2rem;
+    }
+    .intro-kicker{font-family:'Space Mono',monospace;font-size:.73rem;letter-spacing:.26em;text-transform:uppercase;color:#c4b99a}
+    .intro-title{font-size:clamp(2.5rem,7vw,5.5rem);line-height:.95;margin:.7rem 0;color:#f4e8d3;text-shadow:0 5px 22px rgba(0,0,0,.6)}
+    .intro-subtitle{font-size:clamp(1.05rem,2vw,1.35rem);color:#ddcfb7;max-width:580px;margin:0 auto 1.8rem}
+    .begin-btn,.ticket-btn,.ghost-btn,.simple-btn{
+      border:none;cursor:pointer;transition:transform .25s ease, box-shadow .25s ease, background .25s ease;
+      outline:none;
+    }
+    .begin-btn:focus-visible,.ticket-btn:focus-visible,.ghost-btn:focus-visible,.simple-btn:focus-visible,.sound-toggle:focus-visible{box-shadow:0 0 0 3px rgba(255,255,255,.85),0 0 0 7px rgba(214,108,74,.6)}
+    .begin-btn{background:#9b2c2f;color:#fff8ed;padding:.9rem 1.4rem;border-radius:999px;font-family:'Space Mono',monospace;font-size:.78rem;letter-spacing:.15em;text-transform:uppercase;box-shadow:0 12px 30px rgba(0,0,0,.35)}
+    .begin-btn:hover{transform:translateY(-2px);background:#b13b3d}
+    .sound-toggle{position:absolute;right:1.2rem;top:1.2rem;z-index:80;width:44px;height:44px;border-radius:999px;border:1px solid rgba(255,255,255,.22);background:rgba(7,16,12,.5);backdrop-filter:blur(8px);display:grid;place-items:center;color:#f4ead9;cursor:pointer}
+    .sound-toggle svg{width:18px;height:18px}
+    .room{background:linear-gradient(180deg,#17241c 0%,#102017 100%)}
+    .room-wall{position:absolute;inset:0 0 30% 0;background:linear-gradient(180deg,#1a271f,#14231a)}
+    .wood-floor{position:absolute;left:0;right:0;bottom:0;height:34%;background:linear-gradient(180deg,#3b2a21,#241813)}
+    .wood-floor:before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 110px,rgba(255,255,255,.035) 112px 114px)}
+    .lamp{position:absolute;right:12%;top:22%;width:12px;height:170px;background:#3c2a1d;border-radius:8px;z-index:3}
+    .lamp:before{content:"";position:absolute;left:50%;top:-46px;transform:translateX(-50%);width:92px;height:54px;background:#b17949;clip-path:polygon(16% 0,84% 0,100% 100%,0 100%);box-shadow:0 0 55px rgba(242,166,94,.7)}
+    .lamp:after{content:"";position:absolute;left:50%;top:-80px;transform:translateX(-50%);width:190px;height:190px;border-radius:50%;background:radial-gradient(circle,rgba(239,164,91,.26),transparent 65%)}
+    .window{position:absolute;left:8%;top:13%;width:170px;height:120px;border:8px solid #4d3a2a;background:linear-gradient(180deg,#152534,#0e171f);overflow:hidden}
+    .window:before,.window:after{content:"";position:absolute;background:#4d3a2a}.window:before{width:8px;height:100%;left:50%;top:0}.window:after{height:8px;width:100%;left:0;top:50%}
+    .rain{position:absolute;inset:0;background:repeating-linear-gradient(110deg,transparent 0 10px,rgba(190,220,224,.35) 11px 12px,transparent 13px 26px);animation:rain 1.2s linear infinite}
+    @keyframes rain{from{background-position:0 0}to{background-position:-20px 60px}}
+    .poster{position:absolute;width:72px;height:98px;border:4px solid #3b2a21;background:#271b18;top:17%;box-shadow:0 8px 12px rgba(0,0,0,.25)}
+    .poster.one{left:29%;background:linear-gradient(180deg,#431a1a,#16100f)}
+    .poster.two{left:40%;background:linear-gradient(180deg,#193326,#0d1713)}
+    .poster:before{content:"";position:absolute;left:10px;right:10px;top:13px;height:12px;background:rgba(255,255,255,.14)}
+    .tv{position:absolute;left:50%;top:18%;transform:translateX(-50%);width:min(42vw,430px);height:215px;background:#1a1c18;border:12px solid #26231e;border-radius:8px;box-shadow:0 16px 30px rgba(0,0,0,.35);overflow:hidden;z-index:4}
+    .tv-screen{position:absolute;inset:8px;background:
+      linear-gradient(180deg,rgba(0,0,0,.05),rgba(0,0,0,.4)),
+      url('https://images.pexels.com/photos/15015851/pexels-photo-15015851.jpeg?auto=compress&cs=tinysrgb&w=1000') center/cover;
+      animation:tvFlicker 4s infinite;
+    }
+    .tv-screen:after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(180deg,rgba(255,255,255,.04) 0 1px,transparent 2px 4px);mix-blend-mode:screen}
+    @keyframes tvFlicker{0%,100%{filter:brightness(.9)}48%{filter:brightness(1.05)}50%{filter:brightness(.78)}52%{filter:brightness(1.05)}}
+    .tv-stand{position:absolute;left:50%;top:calc(18% + 215px);transform:translateX(-50%);width:310px;height:42px;background:#31251f;border-radius:0 0 10px 10px}
+    .sofa{position:absolute;left:50%;bottom:14%;transform:translateX(-50%);width:min(62vw,560px);height:140px;background:#5d4a3b;border-radius:28px 28px 18px 18px;z-index:5;box-shadow:0 14px 22px rgba(0,0,0,.28)}
+    .sofa:before,.sofa:after{content:"";position:absolute;bottom:0;width:80px;height:112px;background:#6b5645;border-radius:24px}.sofa:before{left:-20px}.sofa:after{right:-20px}
+    .cushion{position:absolute;top:22px;width:32%;height:82px;background:#715b49;border-radius:18px}
+    .cushion.c1{left:5%}.cushion.c2{left:34%}.cushion.c3{right:5%}
+    .person{position:absolute;bottom:70px;width:78px;height:130px;z-index:8}
+    .person.left{left:42%}.person.right{left:52%}
+    .head{position:absolute;left:20px;top:0;width:42px;height:46px;border-radius:50%;background:#d8a583}
+    .hair{position:absolute;left:17px;top:-3px;width:48px;height:24px;border-radius:50% 50% 40% 40%;background:#241814}
+    .body{position:absolute;left:8px;top:40px;width:62px;height:70px;border-radius:22px 22px 10px 10px;background:#8b2c2f}
+    .person.right .body{background:#365648}
+    .arm{position:absolute;top:50px;width:16px;height:60px;border-radius:12px;background:#d8a583;transform-origin:top center}
+    .arm.a1{left:4px;transform:rotate(16deg)}.arm.a2{right:2px;transform:rotate(-32deg)}
+    .person.left .arm.a2{animation:popcornEat 3.2s ease-in-out infinite}
+    @keyframes popcornEat{0%,100%{transform:rotate(-32deg)}50%{transform:rotate(-72deg)}}
+    .leg{position:absolute;bottom:-18px;width:18px;height:46px;border-radius:10px;background:#26342f}
+    .leg.l1{left:18px;transform:rotate(8deg)}.leg.l2{right:12px;transform:rotate(-8deg)}
+    .table{position:absolute;left:50%;bottom:6%;transform:translateX(-50%);width:260px;height:44px;background:#60422f;border-radius:50%;z-index:7}
+    .popcorn-bowl{position:absolute;left:50%;bottom:8%;transform:translateX(-50%);width:62px;height:34px;background:#f0efe8;border-radius:8px 8px 28px 28px;z-index:9}
+    .popcorn-bowl:before{content:"";position:absolute;left:8px;right:8px;top:-10px;height:16px;background:radial-gradient(circle at 8px 10px,#f5d981 0 5px,transparent 6px),radial-gradient(circle at 19px 5px,#fff3b0 0 5px,transparent 6px),radial-gradient(circle at 30px 10px,#f5d981 0 5px,transparent 6px),radial-gradient(circle at 42px 5px,#fff3b0 0 5px,transparent 6px)}
+    .living-caption{position:absolute;left:50%;bottom:4.6rem;transform:translateX(-50%);z-index:30;font-size:1.1rem;color:#eadac4;text-align:center}
+    .portal-scene{background:#07100c}
+    .portal-scene .room-clone{position:absolute;inset:0;filter:brightness(.48) saturate(.7)}
+    .portal-glow{position:absolute;left:50%;top:29%;transform:translateX(-50%);width:min(48vw,460px);height:225px;border-radius:14px;background:radial-gradient(circle,rgba(139,255,183,.48),rgba(17,109,68,.22) 35%,transparent 70%);filter:blur(8px);animation:portalPulse 1.7s ease-in-out infinite;z-index:20}
+    @keyframes portalPulse{0%,100%{transform:translateX(-50%) scale(.95);opacity:.75}50%{transform:translateX(-50%) scale(1.08);opacity:1}}
+    .portal-ring{position:absolute;left:50%;top:18%;transform:translateX(-50%);width:min(45vw,430px);height:215px;border:3px solid rgba(123,255,182,.65);box-shadow:0 0 35px rgba(63,255,155,.75), inset 0 0 28px rgba(65,255,153,.32);z-index:25;animation:ringShake .18s infinite}
+    @keyframes ringShake{0%,100%{transform:translateX(-50%) translate(0,0)}25%{transform:translateX(-50%) translate(2px,-1px)}50%{transform:translateX(-50%) translate(-2px,1px)}75%{transform:translateX(-50%) translate(1px,2px)}}
+    .energy{position:absolute;width:4px;height:110px;background:linear-gradient(180deg,transparent,#8bf4b4,transparent);filter:blur(1px);left:50%;top:20%;z-index:30;animation:energyShoot 1.4s ease-in-out infinite}
+    .energy.e1{transform:translateX(-150px) rotate(-45deg);animation-delay:.1s}.energy.e2{transform:translateX(140px) rotate(52deg);animation-delay:.4s}.energy.e3{transform:translateX(40px) rotate(18deg);animation-delay:.7s}
+    @keyframes energyShoot{0%,100%{opacity:.2;height:60px}50%{opacity:1;height:140px}}
+    .book{position:absolute;width:40px;height:25px;background:#6d302b;z-index:35;animation:bookFly 3.2s linear infinite}
+    .book.b1{left:18%;top:34%;animation-delay:0s}.book.b2{right:17%;top:42%;animation-delay:1s}.book.b3{left:30%;top:21%;animation-delay:1.7s}
+    @keyframes bookFly{0%{transform:translate(0,0) rotate(0deg);opacity:0}15%{opacity:1}100%{transform:translate(70px,-60px) rotate(300deg);opacity:0}}
+    .flash{position:absolute;inset:0;background:white;opacity:0;z-index:60;pointer-events:none}
+    .flash.go{animation:flash .9s ease}
+    @keyframes flash{0%{opacity:0}35%{opacity:.85}100%{opacity:0}}
+    .forest-scene{background:#07120e}
+    .forest-bg,.clearing-bg,.ending-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+    .forest-bg{filter:brightness(.58) saturate(.8) contrast(1.05);transform:scale(1.08);animation:forestDrift 18s ease-in-out infinite alternate}
+    @keyframes forestDrift{from{transform:scale(1.08) translateX(0)}to{transform:scale(1.14) translateX(-18px)}}
+    .forest-overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(3,10,7,.2),rgba(3,10,7,.65));z-index:2}
+    .moon{position:absolute;right:12%;top:12%;width:88px;height:88px;border-radius:50%;background:#dce7cf;box-shadow:0 0 45px rgba(223,236,210,.42);z-index:3}
+    .fog{position:absolute;left:-10%;right:-10%;height:24%;background:linear-gradient(90deg,transparent,rgba(210,227,216,.16),transparent);filter:blur(18px);z-index:6;animation:fogMove 16s linear infinite}
+    .fog.f1{bottom:12%}.fog.f2{bottom:32%;animation-duration:22s;animation-direction:reverse}
+    @keyframes fogMove{from{transform:translateX(-8%)}to{transform:translateX(8%)}}
+    .runner{position:absolute;bottom:15%;width:74px;height:126px;z-index:10;animation:runnerBob .55s ease-in-out infinite}
+    .runner.r1{left:39%}.runner.r2{left:47%;animation-delay:.08s}
+    @keyframes runnerBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+    .runner .head{background:#d1a184}
+    .runner .body{background:#6e2d30}
+    .runner.r2 .body{background:#355747}
+    .runner .arm.a1{animation:runArm1 .55s ease-in-out infinite}.runner .arm.a2{animation:runArm2 .55s ease-in-out infinite}
+    @keyframes runArm1{0%,100%{transform:rotate(30deg)}50%{transform:rotate(-24deg)}}@keyframes runArm2{0%,100%{transform:rotate(-30deg)}50%{transform:rotate(24deg)}}
+    .runner .leg.l1{animation:runLeg1 .55s ease-in-out infinite}.runner .leg.l2{animation:runLeg2 .55s ease-in-out infinite}
+    @keyframes runLeg1{0%,100%{transform:rotate(25deg)}50%{transform:rotate(-18deg)}}@keyframes runLeg2{0%,100%{transform:rotate(-20deg)}50%{transform:rotate(24deg)}}
+    .shadow-creature{position:absolute;bottom:22%;width:58px;height:90px;background:#07100c;border-radius:50% 50% 30% 30%;opacity:.68;z-index:5;animation:shadowPass 8s linear infinite}
+    .shadow-creature:before,.shadow-creature:after{content:"";position:absolute;top:10px;width:7px;height:7px;border-radius:50%;background:#c8f0ca;box-shadow:0 0 8px #bdf1c3}
+    .shadow-creature:before{left:17px}.shadow-creature:after{right:17px}
+    @keyframes shadowPass{from{left:105%}to{left:-10%}}
+    .forest-caption{position:absolute;left:50%;bottom:4.2rem;transform:translateX(-50%);z-index:30;font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:.17em;font-size:.72rem;color:#d3decf;text-align:center}
+    .clearing-scene{background:#07100c}
+    .clearing-bg{filter:brightness(.58) saturate(.9);transform:scale(1.04)}
+    .clearing-overlay{position:absolute;inset:0;background:radial-gradient(circle at 50% 42%,rgba(114,149,117,.08),rgba(6,12,9,.72) 72%);z-index:2}
+    .firefly{position:absolute;width:5px;height:5px;border-radius:50%;background:#f6e89d;box-shadow:0 0 10px #e8db84;z-index:8;animation:firefly 5s ease-in-out infinite}
+    @keyframes firefly{0%,100%{transform:translate(0,0);opacity:.25}50%{transform:translate(18px,-24px);opacity:1}}
+    .message-wrap{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;z-index:20;padding:2rem}
+    .message-line{font-size:clamp(2rem,5vw,4rem);line-height:1.05;color:#f4ecd9;text-shadow:0 4px 18px rgba(0,0,0,.45);opacity:0;transform:translateY(20px);transition:all 1s ease}
+    .message-line.show{opacity:1;transform:translateY(0)}
+    .decision-scene{background:#07100c}
+    .decision-content{position:absolute;inset:0;z-index:20;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:2rem}
+    .decision-eyebrow{font-family:'Space Mono',monospace;font-size:.75rem;letter-spacing:.2em;text-transform:uppercase;color:#d7c8ad;margin-bottom:.75rem}
+    .decision-title{font-size:clamp(2.2rem,5.5vw,4.6rem);line-height:1;color:#fff3df;max-width:850px}
+    .choice-row{display:flex;gap:1rem;align-items:center;justify-content:center;margin-top:2rem;flex-wrap:wrap}
+    .ticket-btn{position:relative;background:#b83236;color:#fff9ef;padding:1rem 2rem;border-radius:14px;font-family:'Space Mono',monospace;font-size:.92rem;letter-spacing:.12em;text-transform:uppercase;box-shadow:0 0 28px rgba(184,50,54,.38)}
+    .ticket-btn:before,.ticket-btn:after{content:"";position:absolute;top:50%;transform:translateY(-50%);width:18px;height:18px;border-radius:50%;background:#07100c}
+    .ticket-btn:before{left:-9px}.ticket-btn:after{right:-9px}
+    .ticket-btn:hover{transform:translateY(-3px) scale(1.03);box-shadow:0 0 34px rgba(214,85,88,.56)}
+    .ghost-btn{background:rgba(225,234,230,.1);color:#dfe8e1;border:1px solid rgba(223,232,225,.26);padding:.8rem 1.15rem;border-radius:999px;font-family:'Space Mono',monospace;font-size:.75rem;letter-spacing:.1em;text-transform:uppercase;animation:nervous 1.8s ease-in-out infinite}
+    @keyframes nervous{0%,100%{transform:translateX(0)}25%{transform:translateX(-2px)}50%{transform:translateX(2px)}75%{transform:translateX(-1px)}}
+    .ghost-btn:hover{background:rgba(225,234,230,.16)}
+    .ending-scene{background:#07100c}
+    .ending-bg{filter:brightness(.58) saturate(.95);transform:scale(1.03)}
+    .ending-overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(8,12,11,.18),rgba(8,12,11,.72));z-index:2}
+    .ending-content{position:absolute;inset:0;z-index:18;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:2rem}
+    .yes-title,.no-title{font-size:clamp(2.4rem,6vw,5rem);line-height:1;color:#fff4df;text-shadow:0 4px 18px rgba(0,0,0,.42)}
+    .yes-subtitle,.no-subtitle{font-size:clamp(1.05rem,2vw,1.35rem);max-width:620px;margin-top:.8rem;color:#eadbc5}
+    .simple-btn{margin-top:1.4rem;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);color:#fff8ec;padding:.8rem 1.1rem;border-radius:999px;font-family:'Space Mono',monospace;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase}
+    .simple-btn:hover{background:rgba(255,255,255,.18);transform:translateY(-2px)}
+    .heart,.ticket,.pop{position:absolute;z-index:30;pointer-events:none;animation:fall 6s linear infinite}
+    @keyframes fall{from{transform:translateY(-10vh) rotate(0deg);opacity:0}10%{opacity:1}to{transform:translateY(110vh) rotate(360deg);opacity:0}}
+    .heart{color:#ffb0b5;font-size:20px}
+    .ticket{width:28px;height:15px;background:#e3bf6d;border-radius:3px}
+    .pop{width:8px;height:8px;border-radius:50%;background:#fff2b5}
+    .ghost-scene{background:radial-gradient(circle at center,rgba(36,55,48,.5),#07100c 70%)}
+    .ghost-wrap{position:absolute;left:50%;top:42%;transform:translate(-50%,-50%);z-index:20;text-align:center}
+    .ghost{position:relative;width:120px;height:150px;margin:0 auto 1.2rem;background:#d8e6df;border-radius:60px 60px 30px 30px;animation:floating 4s ease-in-out infinite;box-shadow:0 0 25px rgba(210,230,219,.2)}
+    .ghost:after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:24px;background:radial-gradient(circle at 12px 0,#07100c 0 12px,transparent 13px),radial-gradient(circle at 36px 0,#07100c 0 12px,transparent 13px),radial-gradient(circle at 60px 0,#07100c 0 12px,transparent 13px),radial-gradient(circle at 84px 0,#07100c 0 12px,transparent 13px),radial-gradient(circle at 108px 0,#07100c 0 12px,transparent 13px)}
+    .ghost-eye{position:absolute;top:52px;width:12px;height:16px;background:#23352f;border-radius:50%}.ghost-eye.e1{left:34px}.ghost-eye.e2{right:34px}
+    .ghost-mouth{position:absolute;left:50%;top:84px;transform:translateX(-50%);width:16px;height:12px;border-radius:50%;background:#23352f}
+    .tear{position:absolute;width:5px;height:12px;border-radius:50%;background:#9fd6e7;top:70px;animation:tearDrop 1.8s infinite}.tear.t1{left:25px}.tear.t2{right:25px;animation-delay:.5s}
+    @keyframes tearDrop{0%{opacity:0;transform:translateY(0)}25%{opacity:1}100%{opacity:0;transform:translateY(32px)}}
+    .tiny-ghost{position:absolute;width:34px;height:44px;background:#dceae2;border-radius:18px 18px 8px 8px;z-index:16;opacity:.8;animation:tinyGhost 8s linear infinite}
+    .tiny-ghost:before,.tiny-ghost:after{content:"";position:absolute;top:15px;width:4px;height:5px;border-radius:50%;background:#26362f}.tiny-ghost:before{left:10px}.tiny-ghost:after{right:10px}
+    @keyframes tinyGhost{from{transform:translateX(-10vw) translateY(0)}to{transform:translateX(110vw) translateY(-20px)}}
+    @media (max-width: 760px){
+      .tv{width:72vw;height:150px;top:18%}
+      .tv-stand{top:calc(18% + 150px);width:210px}
+      .sofa{width:82vw;height:118px;bottom:16%}
+      .person.left{left:35%}.person.right{left:49%}
+      .poster{display:none}.lamp{right:6%}.window{left:5%;width:115px;height:84px}
+      .runner.r1{left:31%}.runner.r2{left:43%}
+      .choice-row{flex-direction:column}
+      .living-caption,.forest-caption{width:90%;bottom:4rem}
+    }
+  
+    .battle-arena{position:absolute;inset:0;overflow:hidden}
+    .fighter,.gfighter,.battle-ghost{
+      position:absolute;bottom:20%;width:70px;height:110px;z-index:30;
+    }
+    .fighter{left:28%;}
+    .gfighter{left:42%;}
+    .battle-ghost{right:25%;width:90px;height:130px;}
+    .fighter .body,.gfighter .body{animation:bob .6s infinite alternate}
+    @keyframes bob{from{transform:translateY(0)}to{transform:translateY(-6px)}}
+    .beam{
+      position:absolute;height:8px;width:20px;
+      background:#8bf4b4;box-shadow:0 0 20px #8bf4b4;
+      border-radius:10px;z-index:40;
+      animation:shoot 1s linear forwards;
+    }
+    @keyframes shoot{
+      from{transform:translateX(0);opacity:1}
+      to{transform:translateX(500px);opacity:1}
+    }
+    .healthbar{
+      position:absolute;top:12%;left:50%;
+      transform:translateX(-50%);
+      width:300px;height:22px;
+      border:2px solid #fff;z-index:60;
+    }
+    .healthfill{
+      width:100%;height:100%;background:#e33;
+      transition:width 1s linear;
+    }
+    .ghost-dead{
+      animation:ghostDeath 2s forwards;
+    }
+    @keyframes ghostDeath{
+      0%{opacity:1;transform:scale(1)}
+      100%{opacity:0;transform:scale(2)}
+    }
+    .kiss-scene{
+      position:absolute;inset:0;display:flex;
+      align-items:center;justify-content:center;
+      font-size:90px;z-index:70;
+      animation:fadeIn 2s forwards;
+    }
+    @keyframes fadeIn{
+      from{opacity:0}to{opacity:1}
+    }
+
+</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+  <script src="/_sdk/resizing_sdk.js" type="text/javascript"></script>
+ <script src="/_sdk/telemetry_sdk.js"></script></head>
+ <body data-template-id="__page-root" style="background: rgb(7, 16, 12);">
+  <main class="app-shell cinema-bars">
+   <button id="soundToggle" class="sound-toggle" aria-label="Toggle sound"> <i data-lucide="volume-2"></i> </button>
+   <section id="intro" class="scene intro-bg grain vignette active">
+    <div class="intro-card">
+     <p data-template-id="intro-kicker" class="canva-text intro-kicker fade-up" style="color: rgb(196, 185, 154); font-weight: 400; font-style: normal; font-size: 12px; letter-spacing: 0.16rem;">one unexpected scary movie night</p>
+     <h1 data-template-id="intro-title" class="canva-text intro-title fade-up" style="animation-delay: 0.18s; color: rgb(244, 232, 211); font-weight: 700; font-style: normal; font-size: 32px;">A little horror. A little romance.</h1>
+     <p data-template-id="intro-subtitle" class="canva-text intro-subtitle fade-up" style="animation-delay: 0.35s; color: rgb(221, 207, 183); font-weight: 400; font-style: normal; font-size: 20px;">Press play for a tiny adventure through portals, haunted woods, and one very important question.</p><button id="beginBtn" data-template-id="begin-button" class="canva-button begin-btn fade-up" style="animation-delay: 0.55s; background: rgb(155, 44, 47); color: rgb(255, 248, 237); font-weight: 700; font-style: normal; font-size: 12px; letter-spacing: 0.12rem;">Lets gooooooo</button>
+    </div>
+   </section>
+   <section id="living" class="scene room grain vignette">
+    <div class="room-wall"></div>
+    <div class="wood-floor"></div>
+    <div class="window">
+     <div class="rain"></div>
+    </div>
+    <div class="poster one"></div>
+    <div class="poster two"></div>
+    <div class="lamp"></div>
+    <div class="tv">
+     <div class="tv-screen"></div>
+    </div>
+    <div class="tv-stand"></div>
+    <div class="sofa">
+     <div class="cushion c1"></div>
+     <div class="cushion c2"></div>
+     <div class="cushion c3"></div>
+    </div>
+    <div class="person left">
+     <div class="head"></div>
+     <div class="hair"></div>
+     <div class="body"></div>
+     <div class="arm a1"></div>
+     <div class="arm a2"></div>
+     <div class="leg l1"></div>
+     <div class="leg l2"></div>
+    </div>
+    <div class="person right">
+     <div class="head"></div>
+     <div class="hair"></div>
+     <div class="body"></div>
+     <div class="arm a1"></div>
+     <div class="arm a2"></div>
+     <div class="leg l1"></div>
+     <div class="leg l2"></div>
+    </div>
+    <div class="table"></div>
+    <div class="popcorn-bowl"></div>
+    <p data-template-id="living-caption" class="canva-text living-caption" style="color: rgb(234, 218, 196); font-weight: 400; font-style: normal; font-size: 19px;">It started with a bad decision to stay awake, one very cozy bed and no AC</p>
+   </section>
+   <section id="portal" class="scene portal-scene grain vignette">
+    <div class="room-clone">
+     <div class="room-wall"></div>
+     <div class="wood-floor"></div>
+     <div class="window">
+      <div class="rain"></div>
+     </div>
+     <div class="lamp"></div>
+     <div class="tv">
+      <div class="tv-screen"></div>
+     </div>
+     <div class="tv-stand"></div>
+     <div class="sofa">
+      <div class="cushion c1"></div>
+      <div class="cushion c2"></div>
+      <div class="cushion c3"></div>
+     </div>
+    </div>
+    <div class="portal-glow"></div>
+    <div class="portal-ring"></div>
+    <div class="energy e1"></div>
+    <div class="energy e2"></div>
+    <div class="energy e3"></div>
+    <div class="book b1"></div>
+    <div class="book b2"></div>
+    <div class="book b3"></div>
+    <div id="portalFlash" class="flash"></div>
+   </section>
+   <section id="forest" class="scene forest-scene grain vignette">
+    <img data-template-id="forest-image" class="canva-image forest-bg" loading="lazy" src="https://images.pexels.com/photos/15015851/pexels-photo-15015851.jpeg" alt="Eerie forest landscape with towering trees and thick mist under a night sky.">
+    <div class="forest-overlay"></div>
+    <div class="moon"></div>
+    <div class="fog f1"></div>
+    <div class="fog f2"></div>
+    <div class="shadow-creature"></div>
+    <div class="runner r1">
+     <div class="head"></div>
+     <div class="hair"></div>
+     <div class="body"></div>
+     <div class="arm a1"></div>
+     <div class="arm a2"></div>
+     <div class="leg l1"></div>
+     <div class="leg l2"></div>
+    </div>
+    <div class="runner r2">
+     <div class="head"></div>
+     <div class="hair"></div>
+     <div class="body"></div>
+     <div class="arm a1"></div>
+     <div class="arm a2"></div>
+     <div class="leg l1"></div>
+     <div class="leg l2"></div>
+    </div>
+    <p data-template-id="forest-caption" class="canva-text forest-caption" style="color: rgb(211, 222, 207); font-weight: 400; font-style: normal; font-size: 12px; letter-spacing: 0.12rem;">yapping our way through evil dead, let's survive this together!!</p>
+   </section>
+   <section id="clearing" class="scene clearing-scene grain vignette">
+    <img data-template-id="clearing-image" class="canva-image clearing-bg" loading="lazy" src="https://images.pexels.com/photos/9007628/pexels-photo-9007628.jpeg" alt="Magical forest scene with glowing fireflies creating a mystical ambiance.">
+    <div class="clearing-overlay"></div><span class="firefly" style="left:18%;top:34%;animation-delay:.2s"></span><span class="firefly" style="left:25%;top:60%;animation-delay:1.1s"></span> <span class="firefly" style="left:72%;top:42%;animation-delay:1.8s"></span><span class="firefly" style="left:82%;top:58%;animation-delay:.7s"></span> <span class="firefly" style="left:53%;top:26%;animation-delay:2.2s"></span><span class="firefly" style="left:41%;top:70%;animation-delay:1.5s"></span>
+    <div class="message-wrap">
+     <div id="msg1" data-template-id="line-one" class="canva-text message-line" style="color: rgb(244, 236, 217); font-weight: 700; font-style: normal; font-size: 16px;">Can't go through this alone.</div>
+     <div id="msg2" data-template-id="line-two" class="canva-text message-line" style="color: rgb(244, 236, 217); font-weight: 700; font-style: normal; font-size: 16px;">Are you ready to go on an adventure?</div>
+     <div id="msg3" data-template-id="line-three" class="canva-text message-line" style="color: rgb(244, 236, 217); font-weight: 700; font-style: normal; font-size: 16px;">But first...</div>
+     <div id="msg4" data-template-id="line-four" class="canva-text message-line" style="color: rgb(244, 236, 217); font-weight: 700; font-style: normal; font-size: 16px;">Let's start with a date ❤️</div>
+    </div>
+   </section>
+   <section id="decision" class="scene decision-scene grain vignette">
+    <img data-template-id="clearing-image" class="canva-image clearing-bg" loading="lazy" src="https://images.pexels.com/photos/9007628/pexels-photo-9007628.jpeg" alt="Magical forest scene with glowing fireflies creating a mystical ambiance.">
+    <div class="clearing-overlay"></div>
+    <div class="decision-content">
+     <p data-template-id="decision-eyebrow" class="canva-text decision-eyebrow" style="color: rgb(215, 200, 173); font-weight: 400; font-style: normal; font-size: 12px; letter-spacing: 0.16rem;">final scene</p>
+     <h2 data-template-id="decision-title" class="canva-text decision-title" style="color: rgb(255, 243, 223); font-weight: 700; font-style: normal; font-size: 24px;">So... will you go on this little adventure with me?</h2>
+     <div class="choice-row">
+      <button id="yesBtn" data-template-id="yes-button" class="canva-button ticket-btn" style="background: rgb(184, 50, 54); color: rgb(255, 249, 239); font-weight: 700; font-style: normal; font-size: 14px; letter-spacing: 0.08rem;">Yes, obviously ❤️</button> <button id="noBtn" data-template-id="no-button" class="canva-button ghost-btn" style="background: rgba(225, 234, 230, 0.1); color: rgb(223, 232, 225); font-weight: 700; font-style: normal; font-size: 12px; letter-spacing: 0.06rem;">No... 👻</button>
+     </div>
+    </div>
+   </section>
+   <section id="yesEnding" class="scene ending-scene grain vignette">
+    <img data-template-id="ending-image" class="canva-image ending-bg" loading="lazy" src="https://images.pexels.com/photos/4881679/pexels-photo-4881679.jpeg" alt="A group of friends enjoys a rooftop movie night under string lights with a projector and cozy blankets.">
+    <div class="ending-overlay"></div>
+    <div id="celebrationLayer"></div>
+    <div class="ending-content">
+     <h2 data-template-id="yes-title" class="canva-text yes-title" style="color: rgb(255, 244, 223); font-weight: 700; font-style: normal; font-size: 24px;">Yay! It's a date! 🍿❤️</h2>
+     <p data-template-id="yes-subtitle" class="canva-text yes-subtitle" style="color: rgb(234, 219, 197); font-weight: 400; font-style: normal; font-size: 21px;">Dev is waiting for u ;)</p><button id="replayBtn" data-template-id="replay-button" class="canva-button simple-btn" style="background: rgba(255, 255, 255, 0.12); color: rgb(255, 248, 236); font-weight: 700; font-style: normal; font-size: 12px; letter-spacing: 0.08rem;">Replay the story</button>
+    </div>
+   </section>
+   <section id="noEnding" class="scene ghost-scene grain vignette">
+    <div id="ghostLayer"></div>
+    <div class="ghost-wrap">
+     <div class="ghost">
+      <span class="ghost-eye e1"></span><span class="ghost-eye e2"></span><span class="ghost-mouth"></span><span class="tear t1"></span><span class="tear t2"></span>
+     </div>
+     <h2 data-template-id="no-title" class="canva-text no-title" style="color: rgb(255, 244, 223); font-weight: 700; font-style: normal; font-size: 24px;">Oh no... even the ghosts are disappointed 👻</h2>
+     <p data-template-id="no-subtitle" class="canva-text no-subtitle" style="color: rgb(234, 219, 197); font-weight: 400; font-style: normal; font-size: 21px;">Are you absolutely sure?</p>
+     <div class="choice-row">
+      <button id="actuallyYesBtn" data-template-id="actually-yes-button" class="canva-button ticket-btn" style="background: rgb(184, 50, 54); color: rgb(255, 249, 239); font-weight: 700; font-style: normal; font-size: 14px; letter-spacing: 0.08rem;">Actually, Yes ❤️ (extra kisses included hehehe)</button> <button id="stillNoBtn" data-template-id="still-no-button" class="canva-button ghost-btn" style="background: rgba(225, 234, 230, 0.1); color: rgb(223, 232, 225); font-weight: 700; font-style: normal; font-size: 12px; letter-spacing: 0.06rem;">Still No 👻</button>
+     </div>
+    </div>
+   </section>
+  
+<section id="battleScene" class="scene forest-scene grain vignette">
+  <img class="forest-bg" src="https://images.pexels.com/photos/15015851/pexels-photo-15015851.jpeg">
+  <div class="battle-arena">
+    <div class="healthbar"><div id="healthFill" class="healthfill"></div></div>
+
+    <div class="fighter">
+      <div class="head"></div><div class="hair"></div><div class="body"></div>
+    </div>
+
+    <div class="gfighter">
+      <div class="head"></div><div class="hair"></div><div class="body" style="background:#355747"></div>
+    </div>
+
+    <div id="battleGhost" class="battle-ghost ghost">
+      <span class="ghost-eye e1"></span>
+      <span class="ghost-eye e2"></span>
+      <span class="ghost-mouth"></span>
+    </div>
+
+    <div id="kissScene" class="kiss-scene" style="display:none;">
+      🧑‍❤️‍💋‍🧑
+    </div>
+  </div>
+</section>
+
+
+<audio id="storyMusic" loop>
+  <source src="sign_of_the_times.mp3" type="audio/mpeg">
+</audio>
+
+</main>
+  <script src="/_sdk/editing_sdk.js"></script>
+  <script>
+    lucide.createIcons();
+
+    const scenes = ['intro','living','portal','forest','clearing','decision','yesEnding','noEnding','battleScene'];
+    const $ = id => document.getElementById(id);
+    let audioCtx, master, ambience, isMuted = false;
+
+const music=document.getElementById('storyMusic');
+music.volume=0.5;
+
+
+    function showScene(id){
+      scenes.forEach(sceneId => $(sceneId).classList.toggle('active', sceneId === id));
+    }
+
+    function initAudio(){
+      if(audioCtx) return;
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      master = audioCtx.createGain();
+      master.gain.value = 0.18;
+      master.connect(audioCtx.destination);
+
+      ambience = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      ambience.type = 'sine';
+      ambience.frequency.value = 110;
+      gain.gain.value = 0.025;
+      ambience.connect(gain).connect(master);
+      ambience.start();
+    }
+
+    function tone(freq, dur=.25, type='sine', vol=.08){
+      if(!audioCtx || isMuted) return;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = type; osc.frequency.value = freq;
+      gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+      osc.connect(gain).connect(master);
+      osc.start(); osc.stop(audioCtx.currentTime + dur);
+    }
+
+    function whoosh(){
+      if(!audioCtx || isMuted) return;
+      const osc = audioCtx.createOscillator(), gain = audioCtx.createGain(), filter = audioCtx.createBiquadFilter();
+      osc.type='sawtooth'; osc.frequency.setValueAtTime(180, audioCtx.currentTime); osc.frequency.exponentialRampToValueAtTime(60, audioCtx.currentTime+1.2);
+      filter.type='lowpass'; filter.frequency.value=650;
+      gain.gain.setValueAtTime(.05,audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+1.2);
+      osc.connect(filter).connect(gain).connect(master); osc.start(); osc.stop(audioCtx.currentTime+1.2);
+    }
+
+    function setSoundIcon(){
+      $('soundToggle').innerHTML = `<i data-lucide="${isMuted ? 'volume-x' : 'volume-2'}"></i>`;
+      lucide.createIcons();
+    }
+
+    $('soundToggle').addEventListener('click',()=>{
+      initAudio();
+      music.play().catch(()=>{});
+      isMuted = !isMuted;
+      if(master) master.gain.value = isMuted ? 0 : .18;
+      setSoundIcon();
+    });
+
+    $('beginBtn').addEventListener('click',()=>{
+      initAudio();
+      tone(392,.18,'triangle',.05);
+      showScene('living');
+      setTimeout(()=>{ tone(120,.35,'sawtooth',.03); showScene('portal'); }, 5200);
+      setTimeout(()=>{ $('portalFlash').classList.add('go'); whoosh(); }, 7600);
+      setTimeout(()=>{ showScene('forest'); }, 8200);
+      setTimeout(()=>{ showScene('clearing'); revealMessages(); }, 15500);
+      setTimeout(()=>{ showScene('decision'); }, 24500);
+    });
+
+    function revealMessages(){
+      const ids = ['msg1','msg2','msg3','msg4'];
+      ids.forEach((id,i)=>{
+        setTimeout(()=>$(id).classList.add('show'), i*2200);
+      });
+    }
+
+    function createCelebration(){
+      const layer = $('celebrationLayer');
+      layer.innerHTML = '';
+      const symbols = ['❤','❤','🍿'];
+      for(let i=0;i<42;i++){
+        const el = document.createElement('span');
+        const kind = i%3===0?'heart':(i%3===1?'ticket':'pop');
+        el.className = kind;
+        el.style.left = Math.random()*100 + '%';
+        el.style.animationDelay = (Math.random()*3) + 's';
+        el.style.animationDuration = (4 + Math.random()*4) + 's';
+        if(kind==='heart') el.textContent = symbols[Math.floor(Math.random()*2)];
+        layer.appendChild(el);
+      }
+    }
+
+    function goYes(){
+
+      showScene('battleScene');
+
+      const ghost=document.getElementById('battleGhost');
+      const health=document.getElementById('healthFill');
+
+      let hp=100;
+
+      const attack=setInterval(()=>{
+
+        const beam1=document.createElement('div');
+        beam1.className='beam';
+        beam1.style.left='33%';
+        beam1.style.top='55%';
+
+        const beam2=document.createElement('div');
+        beam2.className='beam';
+        beam2.style.left='47%';
+        beam2.style.top='58%';
+
+        document.getElementById('battleScene').appendChild(beam1);
+        document.getElementById('battleScene').appendChild(beam2);
+
+        setTimeout(()=>{
+          beam1.remove();
+          beam2.remove();
+        },1000);
+
+        hp-=20;
+        health.style.width=hp+'%';
+
+        if(hp<=0){
+          clearInterval(attack);
+
+          ghost.classList.add('ghost-dead');
+
+          setTimeout(()=>{
+            document.getElementById('kissScene').style.display='flex';
+          },2000);
+
+          setTimeout(()=>{
+            showScene('yesEnding');
+            createCelebration();
+          },5000);
+        }
+
+      },1200);
+    }
+
+    $('yesBtn').addEventListener('click',goYes);
+    $('actuallyYesBtn').addEventListener('click',goYes);
+    $('noBtn').addEventListener('click',()=>{ showScene('noEnding'); tone(196,.6,'sine',.045); });
+    $('stillNoBtn').addEventListener('click',()=>{
+      tone(164,.5,'sine',.04);
+      const g = document.createElement('div');
+      g.className = 'tiny-ghost';
+      g.style.top = (15 + Math.random()*65) + '%';
+      g.style.animationDelay = '0s';
+      $('ghostLayer').appendChild(g);
+      setTimeout(()=>g.remove(),8000);
+    });
+    $('replayBtn').addEventListener('click',()=>{
+      ['msg1','msg2','msg3','msg4'].forEach(id=>$(id).classList.remove('show'));
+      $('celebrationLayer').innerHTML='';
+      $('ghostLayer').innerHTML='';
+      showScene('intro');
+    });
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a07146de1c3cc6bc',t:'MTc4MDY4NDUyMw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
+</body></html>
